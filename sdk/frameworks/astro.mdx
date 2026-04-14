@@ -1,0 +1,70 @@
+---
+title: "Astro"
+description: "Install Lucent in an Astro site via a Layout component."
+---
+
+<Tip>
+  **Fully automated.** The CLI creates a `LucentInit.astro` component and
+  wires it into your main layout.
+</Tip>
+
+## Install with the CLI
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick **Astro** when prompted.
+
+## Manual setup
+
+<Steps>
+  <Step title="Environment variable">
+    `.env`:
+    ```bash
+    PUBLIC_LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="LucentInit component">
+    `src/components/LucentInit.astro`:
+    ```astro
+    <script>
+      import { LucentTracker } from "@lucenthq/sdk";
+
+      const tracker = new LucentTracker({
+        publicKey: import.meta.env.PUBLIC_LUCENT_PUBLIC_KEY,
+      });
+      tracker.start();
+    </script>
+    ```
+  </Step>
+  <Step title="Render it from your main layout">
+    `src/layouts/Layout.astro`:
+    ```astro
+    ---
+    import LucentInit from "../components/LucentInit.astro";
+    ---
+
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+      </head>
+      <body>
+        <slot />
+        <LucentInit />
+      </body>
+    </html>
+    ```
+  </Step>
+</Steps>
+
+## Notes
+
+- Astro runs `<script>` tags in `.astro` components on the client by default,
+  which is exactly what the recorder needs.
+- The `PUBLIC_` prefix is required by Astro to expose an env var to client
+  scripts. Without it, `import.meta.env.PUBLIC_LUCENT_PUBLIC_KEY` will be
+  `undefined` in the browser.
+- If you use multiple layouts, include `<LucentInit />` in the one your
+  tracked pages extend — or put it in a shared base layout.

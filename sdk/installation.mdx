@@ -8,13 +8,29 @@ It ships both ESM and CommonJS builds and has a single runtime dependency on
 [rrweb](https://www.rrweb.io/). React bindings are exposed under
 `@lucenthq/sdk/react` and are only loaded if you import them.
 
+## Recommended: the CLI installer
+
+The fastest way to install Lucent is the framework‑aware CLI. It picks the
+right provider shape, env var name, and entry file for your framework and
+wires everything up in one shot.
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+See the [CLI installer](/sdk/cli) page for what the CLI does, the full list
+of supported frameworks, and which ones require a final manual step.
+
+If the CLI can't figure out your project — or you just want to see the code
+before it lands in your repo — follow the manual instructions below.
+
 ## Requirements
 
 - A modern browser environment (evergreen Chrome, Safari, Firefox, Edge).
 - A Lucent public key — see the [Quickstart](/quickstart) for how to create one.
 - React 18 or 19 if you plan to use the React bindings (optional peer dependency).
 
-## Install
+## Manual install
 
 <CodeGroup>
 
@@ -84,5 +100,7 @@ The package exposes two entry points:
 
 ## Next steps
 
+- [CLI installer](/sdk/cli) — `npx @lucenthq/cli init` for every supported framework.
+- [Framework pages](/sdk/frameworks/nextjs) — step‑by‑step manual setup per framework.
 - [React integration](/sdk/react) — provider, identify, and hook APIs.
 - [Configuration](/sdk/configuration) — full options reference.

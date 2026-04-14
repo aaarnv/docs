@@ -1,0 +1,51 @@
+---
+title: "Gatsby"
+description: "Install Lucent in a Gatsby v5 site."
+---
+
+<Tip>
+  **Fully automated.** The CLI writes `gatsby-browser.js` with the `onClientEntry`
+  hook.
+</Tip>
+
+## Install with the CLI
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick **Gatsby** when prompted.
+
+## Manual setup
+
+<Steps>
+  <Step title="Environment variable">
+    `.env.development` and `.env.production`:
+    ```bash
+    GATSBY_LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="Wire the tracker into gatsby-browser.js">
+    `gatsby-browser.js`:
+    ```js
+    import { LucentTracker } from "@lucenthq/sdk";
+
+    const tracker = new LucentTracker({
+      publicKey: process.env.GATSBY_LUCENT_PUBLIC_KEY,
+    });
+
+    export const onClientEntry = () => {
+      tracker.start();
+    };
+    ```
+  </Step>
+</Steps>
+
+## Notes
+
+- `gatsby-browser.js` only runs in the browser, so it's a safe place to
+  instantiate the tracker at module scope.
+- `onClientEntry` fires once, right after Gatsby boots — before any routes
+  render — which means the tracker catches the very first page view.
+- The `GATSBY_` prefix makes the variable available in both `process.env`
+  (server build time) and `import.meta.env` (not used here).

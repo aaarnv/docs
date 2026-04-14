@@ -1,0 +1,94 @@
+---
+title: "Remix"
+description: "Install Lucent in a Remix v2 application."
+---
+
+<Warning>
+  **Scaffold + manual step.** Remix doesn't expose environment variables to
+  the browser automatically — you have to surface them via a loader. The CLI
+  writes the `LucentInit` component but leaves the loader wiring to you.
+</Warning>
+
+## Install with the CLI
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick **Remix** when prompted.
+
+## Manual setup
+
+<Steps>
+  <Step title="Environment variable">
+    `.env`:
+    ```bash
+    LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="LucentInit component">
+    `app/components/lucent-init.tsx`:
+    ```tsx
+    "use client";
+
+    import { useEffect } from "react";
+    import { LucentTracker } from "@lucenthq/sdk";
+
+    let tracker: LucentTracker | null = null;
+
+    export function LucentInit({ publicKey }: { publicKey: string }) {
+      useEffect(() => {
+        if (!tracker) {
+          tracker = new LucentTracker({ publicKey });
+          tracker.start();
+        }
+        return () => {
+          tracker?.stop();
+          tracker = null;
+        };
+      }, [publicKey]);
+
+      return null;
+    }
+    ```
+  </Step>
+  <Step title="Expose the key via the root loader (manual)">
+    `app/root.tsx`:
+    ```tsx
+    import type { LoaderFunctionArgs } from "@remix-run/node";
+    import { json, useLoaderData } from "@remix-run/react";
+    import { LucentInit } from "~/components/lucent-init";
+
+    export async function loader({ request }: LoaderFunctionArgs) {
+      return json({
+        ENV: {
+          LUCENT_PUBLIC_KEY: process.env.LUCENT_PUBLIC_KEY,
+        },
+      });
+    }
+
+    export default function App() {
+      const { ENV } = useLoaderData<typeof loader>();
+
+      return (
+        <html>
+          <body>
+            <LucentInit publicKey={ENV.LUCENT_PUBLIC_KEY!} />
+            {/* ...your routes */}
+          </body>
+        </html>
+      );
+    }
+    ```
+  </Step>
+</Steps>
+
+## Notes
+
+- Remix never ships `process.env` to the browser. The loader pattern is the
+  canonical way to expose public keys; don't try to read `process.env`
+  directly from a client component.
+- `LucentInit` renders nothing — it only exists to run the tracker inside a
+  `useEffect` so it initializes on mount and stops on unmount.
+- Prefix the env var with `LUCENT_` (no public prefix) because it's consumed
+  server‑side by the loader before being handed to the client.

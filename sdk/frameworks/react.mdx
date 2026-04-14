@@ -1,0 +1,109 @@
+---
+title: "React"
+description: "Install Lucent in a React app built with Vite or Create React App."
+---
+
+<Tip>
+  **Fully automated.** Both Vite and CRA are wired up completely by the CLI.
+</Tip>
+
+## Install with the CLI
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick **React** when prompted, then choose your build tool.
+
+## Vite
+
+<Steps>
+  <Step title="Environment variable">
+    `.env`:
+    ```bash
+    VITE_LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="Provider component">
+    `src/providers.tsx`:
+    ```tsx
+    import { LucentProvider } from "@lucenthq/sdk/react";
+    import type { ReactNode } from "react";
+
+    export function Providers({ children }: { children: ReactNode }) {
+      return (
+        <LucentProvider publicKey={import.meta.env.VITE_LUCENT_PUBLIC_KEY}>
+          {children}
+        </LucentProvider>
+      );
+    }
+    ```
+  </Step>
+  <Step title="Wrap the render call">
+    `src/main.tsx`:
+    ```tsx
+    import React from "react";
+    import ReactDOM from "react-dom/client";
+    import App from "./App";
+    import { Providers } from "./providers";
+    import "./index.css";
+
+    ReactDOM.createRoot(document.getElementById("root")!).render(
+      <React.StrictMode>
+        <Providers><App /></Providers>
+      </React.StrictMode>,
+    );
+    ```
+  </Step>
+</Steps>
+
+## Create React App
+
+<Steps>
+  <Step title="Environment variable">
+    `.env`:
+    ```bash
+    REACT_APP_LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="Provider component">
+    `src/providers.tsx`:
+    ```tsx
+    import { LucentProvider } from "@lucenthq/sdk/react";
+    import type { ReactNode } from "react";
+
+    export function Providers({ children }: { children: ReactNode }) {
+      return (
+        <LucentProvider publicKey={process.env.REACT_APP_LUCENT_PUBLIC_KEY!}>
+          {children}
+        </LucentProvider>
+      );
+    }
+    ```
+  </Step>
+  <Step title="Wrap the render call">
+    `src/index.tsx`:
+    ```tsx
+    import React from 'react';
+    import ReactDOM from 'react-dom/client';
+    import './index.css';
+    import App from './App';
+    import { Providers } from './providers';
+
+    const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+    root.render(
+      <React.StrictMode>
+        <Providers><App /></Providers>
+      </React.StrictMode>
+    );
+    ```
+  </Step>
+</Steps>
+
+## Notes
+
+- Env var prefixes differ: Vite uses `VITE_`, CRA uses `REACT_APP_`. The CLI
+  picks the right one for you.
+- The provider wraps the render call in the entrypoint, not inside `App.tsx`.
+  This keeps it outside of `React.StrictMode`'s double‑mount behavior so the
+  session isn't reset on the development reload.

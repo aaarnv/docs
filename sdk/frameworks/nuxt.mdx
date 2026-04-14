@@ -1,0 +1,71 @@
+---
+title: "Nuxt"
+description: "Install Lucent in a Nuxt 3 application."
+---
+
+<Warning>
+  **Scaffold + manual step.** The CLI writes a client plugin that reads
+  `config.public.lucentPublicKey` from Nuxt runtime config, but it cannot
+  safely modify `nuxt.config.ts` for you. Add the `runtimeConfig.public`
+  entry after the CLI finishes.
+</Warning>
+
+## Install with the CLI
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick **Nuxt** when prompted.
+
+## Manual setup
+
+<Steps>
+  <Step title="Environment variable">
+    `.env`:
+    ```bash
+    NUXT_PUBLIC_LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="Expose the key via runtimeConfig (manual)">
+    `nuxt.config.ts`:
+    ```ts
+    export default defineNuxtConfig({
+      runtimeConfig: {
+        public: {
+          lucentPublicKey: "",
+        },
+      },
+    });
+    ```
+
+    Nuxt reads `NUXT_PUBLIC_LUCENT_PUBLIC_KEY` from your environment and
+    overrides the empty default at runtime. You don't need to hardcode
+    the key here.
+  </Step>
+  <Step title="Client plugin">
+    `plugins/lucent.client.ts`:
+    ```ts
+    import { LucentTracker } from "@lucenthq/sdk";
+
+    export default defineNuxtPlugin(() => {
+      const config = useRuntimeConfig();
+      const tracker = new LucentTracker({
+        publicKey: config.public.lucentPublicKey as string,
+      });
+      tracker.start();
+
+      return {
+        provide: { lucent: tracker },
+      };
+    });
+    ```
+  </Step>
+</Steps>
+
+## Notes
+
+- Files ending in `.client.ts` inside `plugins/` only run in the browser,
+  which is exactly what you want for a session recorder.
+- The `.client` plugin auto‑loads — you don't need to register it anywhere.
+- Access the tracker from any component with `const { $lucent } = useNuxtApp()`.

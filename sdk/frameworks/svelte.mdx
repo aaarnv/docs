@@ -1,0 +1,107 @@
+---
+title: "Svelte"
+description: "Install Lucent in SvelteKit or plain Svelte."
+---
+
+<Tip>
+  **Fully automated** for both SvelteKit and plain Svelte.
+</Tip>
+
+## Install with the CLI
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick **Svelte / SvelteKit** when prompted, then choose your setup.
+
+## SvelteKit
+
+<Steps>
+  <Step title="Environment variable">
+    `.env`:
+    ```bash
+    PUBLIC_LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="Init module">
+    `src/lib/lucent.ts`:
+    ```ts
+    import { LucentTracker } from "@lucenthq/sdk";
+    import { PUBLIC_LUCENT_PUBLIC_KEY } from "$env/static/public";
+
+    let tracker: LucentTracker | null = null;
+
+    export function initLucent() {
+      if (!tracker) {
+        tracker = new LucentTracker({
+          publicKey: PUBLIC_LUCENT_PUBLIC_KEY,
+        });
+        tracker.start();
+      }
+      return tracker;
+    }
+    ```
+  </Step>
+  <Step title="Call initLucent in the root layout">
+    `src/routes/+layout.svelte`:
+    ```svelte
+    <script>
+      import { onMount } from "svelte";
+      import { initLucent } from "$lib/lucent";
+
+      onMount(() => initLucent());
+    </script>
+
+    <slot />
+    ```
+  </Step>
+</Steps>
+
+## Plain Svelte
+
+<Steps>
+  <Step title="Environment variable">
+    `.env`:
+    ```bash
+    VITE_LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="Init module">
+    `src/lib/lucent.ts`:
+    ```ts
+    import { LucentTracker } from "@lucenthq/sdk";
+
+    let tracker: LucentTracker | null = null;
+
+    export function initLucent() {
+      if (!tracker) {
+        tracker = new LucentTracker({
+          publicKey: import.meta.env.VITE_LUCENT_PUBLIC_KEY,
+        });
+        tracker.start();
+      }
+      return tracker;
+    }
+    ```
+  </Step>
+  <Step title="Call initLucent in your root component">
+    `src/App.svelte`:
+    ```svelte
+    <script>
+      import { onMount } from "svelte";
+      import { initLucent } from "./lib/lucent";
+
+      onMount(() => initLucent());
+    </script>
+    ```
+  </Step>
+</Steps>
+
+## Notes
+
+- SvelteKit uses `$env/static/public` for publicly‑accessible env vars that
+  need the `PUBLIC_` prefix. Plain Svelte uses the Vite `VITE_` prefix.
+- `onMount` ensures the tracker only initializes in the browser — the init
+  module is safe to import during SSR, but calling `initLucent()` at the
+  module top level would crash on the server.

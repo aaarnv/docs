@@ -1,0 +1,79 @@
+---
+title: "Vanilla JavaScript"
+description: "Install Lucent in any app that can import an npm package."
+---
+
+<Warning>
+  **Scaffold only.** The CLI writes a starter file with a placeholder; you
+  still need to add the script tag (or import it from your bundler entry
+  point) yourself.
+</Warning>
+
+## Install with the CLI
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick **Vanilla JavaScript** when prompted.
+
+## Manual setup
+
+<Steps>
+  <Step title="Install the SDK">
+    ```bash
+    npm install @lucenthq/sdk
+    ```
+  </Step>
+  <Step title="Create an init file">
+    `lucent-init.js`:
+    ```js
+    import { LucentTracker } from "@lucenthq/sdk";
+
+    const tracker = new LucentTracker({
+      publicKey: "luc_pk_...",
+    });
+
+    tracker.start();
+    ```
+  </Step>
+  <Step title="Import from your app entry">
+    If you're using a bundler (Vite, Webpack, esbuild, Parcel…), import the
+    file from your main entry point so it runs once when the page loads:
+
+    ```js
+    import "./lucent-init.js";
+    ```
+  </Step>
+</Steps>
+
+## Loading without a bundler
+
+If you don't use a bundler, load the SDK from a CDN with an ESM `<script>`:
+
+```html
+<script type="module">
+  import { LucentTracker } from "https://esm.sh/@lucenthq/sdk";
+
+  const tracker = new LucentTracker({
+    publicKey: "luc_pk_...",
+  });
+
+  tracker.start();
+</script>
+```
+
+<Note>
+  The CDN form is convenient for quick tests but adds a round‑trip on first
+  page load. For production use, bundle `@lucenthq/sdk` into your app.
+</Note>
+
+## Notes
+
+- Replace `"luc_pk_..."` with a real key. Reading it from an env var is your
+  bundler's job — e.g. `process.env.LUCENT_PUBLIC_KEY` with Webpack's
+  `DefinePlugin`, or `import.meta.env.VITE_LUCENT_PUBLIC_KEY` with Vite.
+- For TypeScript projects, `@lucenthq/sdk` ships its own types — no
+  `@types/*` package needed.
+- If you're using React, Vue, Svelte, or one of the other supported
+  frameworks, use the dedicated framework page instead of this one.

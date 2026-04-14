@@ -1,0 +1,64 @@
+---
+title: "Vue"
+description: "Install Lucent in a Vue 3 + Vite application."
+---
+
+<Tip>
+  **Fully automated.** The CLI writes a composable and calls it in `main.ts`.
+</Tip>
+
+## Install with the CLI
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick **Vue** when prompted.
+
+## Manual setup
+
+<Steps>
+  <Step title="Environment variable">
+    `.env`:
+    ```bash
+    VITE_LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="Composable">
+    `src/composables/useLucent.ts`:
+    ```ts
+    import { LucentTracker } from "@lucenthq/sdk";
+
+    let tracker: LucentTracker | null = null;
+
+    export function useLucent() {
+      if (!tracker) {
+        tracker = new LucentTracker({
+          publicKey: import.meta.env.VITE_LUCENT_PUBLIC_KEY,
+        });
+        tracker.start();
+      }
+      return tracker;
+    }
+    ```
+  </Step>
+  <Step title="Initialize in main.ts">
+    `src/main.ts`:
+    ```ts
+    import { createApp } from "vue";
+    import App from "./App.vue";
+    import { useLucent } from "./composables/useLucent";
+
+    useLucent();
+
+    createApp(App).mount("#app");
+    ```
+  </Step>
+</Steps>
+
+## Notes
+
+- Vue doesn't need a provider because tracking is handled by the `LucentTracker`
+  instance directly — the composable just guarantees a single instance.
+- To access the tracker from a component, import `useLucent` and call it —
+  it returns the same singleton each time.

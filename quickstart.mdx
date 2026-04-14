@@ -21,7 +21,31 @@ they can only write session data to your org and cannot read anything.
   </Step>
 </Steps>
 
-## 2. Install the SDK
+## 2. Run the CLI installer
+
+The fastest way to install Lucent is the framework‑aware CLI. It detects your
+package manager, installs `@lucenthq/sdk`, creates a provider file, and wires
+it into your root layout.
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick your framework when prompted. The CLI supports Next.js, React (Vite/CRA),
+Vue, Angular, Svelte, Nuxt, Remix, Astro, Gatsby, and vanilla JavaScript —
+see the [CLI installer](/sdk/cli) page for the full list and what each one
+does.
+
+<Tip>
+  A few frameworks (Angular, Nuxt, Remix, Next.js Pages Router) need one
+  final manual step the CLI can't safely automate. The CLI prints exactly
+  what to do; framework pages have the full walkthrough.
+</Tip>
+
+## 3. Or install manually
+
+If you prefer to wire things up by hand, or your framework isn't in the CLI's
+list, install the package and follow one of the framework pages:
 
 <CodeGroup>
 
@@ -43,50 +67,16 @@ bun add @lucenthq/sdk
 
 </CodeGroup>
 
-## 3. Initialize Lucent
+Pick your framework:
 
-<Tabs>
-  <Tab title="React / Next.js">
-    Wrap your app in `LucentProvider`. It starts recording on mount and stops
-    on unmount.
-
-    ```tsx app/layout.tsx
-    "use client";
-
-    import { LucentProvider } from "@lucenthq/sdk/react";
-
-    export default function RootLayout({ children }: { children: React.ReactNode }) {
-      return (
-        <html lang="en">
-          <body>
-            <LucentProvider publicKey="luc_pk_...">
-              {children}
-            </LucentProvider>
-          </body>
-        </html>
-      );
-    }
-    ```
-
-    <Tip>
-      Store the key in an environment variable like `NEXT_PUBLIC_LUCENT_KEY` so
-      it isn't checked into your repo.
-    </Tip>
-  </Tab>
-  <Tab title="Vanilla JS">
-    Instantiate `LucentTracker` directly and call `start()`.
-
-    ```ts
-    import { LucentTracker } from "@lucenthq/sdk";
-
-    const tracker = new LucentTracker({
-      publicKey: "luc_pk_...",
-    });
-
-    tracker.start();
-    ```
-  </Tab>
-</Tabs>
+<CardGroup cols={3}>
+  <Card title="Next.js" icon="n" href="/sdk/frameworks/nextjs" />
+  <Card title="React" icon="react" href="/sdk/frameworks/react" />
+  <Card title="Vue" icon="vuejs" href="/sdk/frameworks/vue" />
+  <Card title="Svelte" icon="s" href="/sdk/frameworks/svelte" />
+  <Card title="Angular" icon="angular" href="/sdk/frameworks/angular" />
+  <Card title="Vanilla" icon="js" href="/sdk/frameworks/vanilla" />
+</CardGroup>
 
 ## 4. Identify your users (optional)
 
@@ -130,6 +120,9 @@ anonymous ID stored in `localStorage`.
 ## Next steps
 
 <CardGroup cols={2}>
+  <Card title="CLI installer" icon="terminal" href="/sdk/cli">
+    Per‑framework breakdown of what `npx @lucenthq/cli init` does.
+  </Card>
   <Card title="Configuration" icon="gear" href="/sdk/configuration">
     Tune privacy, sampling, capture, and batching.
   </Card>
@@ -138,8 +131,5 @@ anonymous ID stored in `localStorage`.
   </Card>
   <Card title="API reference" icon="terminal" href="/api-reference/introduction">
     The ingest endpoints that power the SDK.
-  </Card>
-  <Card title="Authentication" icon="key" href="/api-reference/authentication">
-    How `luc_pk_` keys are validated and rate limited.
   </Card>
 </CardGroup>

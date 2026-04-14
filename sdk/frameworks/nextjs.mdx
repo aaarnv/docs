@@ -1,0 +1,108 @@
+---
+title: "Next.js"
+description: "Install Lucent in a Next.js app. Works with both App Router and Pages Router."
+---
+
+<Tip>
+  **Fully automated** for Next.js App Router. One manual step for Pages Router
+  (wrap `<Component>`). Both variants scaffold correctly via `npx @lucenthq/cli init`.
+</Tip>
+
+## Install with the CLI
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick **Next.js** when prompted, then choose your router.
+
+## App Router
+
+<Steps>
+  <Step title="Environment variable">
+    `.env.local`:
+    ```bash
+    NEXT_PUBLIC_LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="Provider component">
+    `app/providers.tsx`:
+    ```tsx
+    "use client";
+
+    import { LucentProvider } from "@lucenthq/sdk/react";
+    import type { ReactNode } from "react";
+
+    export function Providers({ children }: { children: ReactNode }) {
+      return (
+        <LucentProvider publicKey={process.env.NEXT_PUBLIC_LUCENT_PUBLIC_KEY!}>
+          {children}
+        </LucentProvider>
+      );
+    }
+    ```
+  </Step>
+  <Step title="Wire it into the root layout">
+    `app/layout.tsx`:
+    ```tsx
+    import { Providers } from "./providers";
+
+    export default function RootLayout({ children }: { children: React.ReactNode }) {
+      return (
+        <html lang="en">
+          <body>
+            <Providers>{children}</Providers>
+          </body>
+        </html>
+      );
+    }
+    ```
+  </Step>
+</Steps>
+
+<Check>
+  The CLI performs all three steps automatically for App Router.
+</Check>
+
+## Pages Router
+
+<Steps>
+  <Step title="Environment variable">
+    `.env.local`:
+    ```bash
+    NEXT_PUBLIC_LUCENT_PUBLIC_KEY=luc_pk_...
+    ```
+  </Step>
+  <Step title="Wrap your app">
+    `pages/_app.tsx`:
+    ```tsx
+    import type { AppProps } from "next/app";
+    import { LucentProvider } from "@lucenthq/sdk/react";
+
+    export default function App({ Component, pageProps }: AppProps) {
+      return (
+        <LucentProvider publicKey={process.env.NEXT_PUBLIC_LUCENT_PUBLIC_KEY!}>
+          <Component {...pageProps} />
+        </LucentProvider>
+      );
+    }
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  **Manual step required.** The CLI adds the `import { LucentProvider }` line
+  to `pages/_app.tsx` but leaves the actual `<Component>` wrapping to you —
+  the exact shape of your `App` export varies too much to automate safely.
+  Copy the example above after running the CLI.
+</Warning>
+
+## Notes
+
+- `LucentProvider` must be rendered in a **client component**. For App Router
+  this means the `Providers` wrapper file needs `"use client"` at the top —
+  the rest of your layout tree can stay a server component.
+- Use `NEXT_PUBLIC_` prefix so the key is available to the browser. Never
+  store a key that isn't prefixed `luc_pk_` in a client‑accessible variable.
+- The provider should sit at the **root** of your tree and never remount. If
+  you wrap per‑page it will reset the session on every navigation.

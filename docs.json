@@ -24,6 +24,22 @@
             "group": "Browser SDK",
             "pages": [
               "sdk/installation",
+              "sdk/cli",
+              {
+                "group": "Frameworks",
+                "pages": [
+                  "sdk/frameworks/nextjs",
+                  "sdk/frameworks/react",
+                  "sdk/frameworks/vue",
+                  "sdk/frameworks/angular",
+                  "sdk/frameworks/svelte",
+                  "sdk/frameworks/nuxt",
+                  "sdk/frameworks/remix",
+                  "sdk/frameworks/astro",
+                  "sdk/frameworks/gatsby",
+                  "sdk/frameworks/vanilla"
+                ]
+              },
               "sdk/react",
               "sdk/configuration"
             ]

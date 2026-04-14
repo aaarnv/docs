@@ -1,0 +1,131 @@
+---
+title: "CLI installer"
+description: "One command to install @lucenthq/sdk and wire it into your framework."
+---
+
+`@lucenthq/cli` is a zero‑config installer for the Lucent browser SDK. Run it
+once, pick your framework, and the CLI writes the provider file, adds the
+environment variable, and wraps your app tree so recording starts on the next
+page load.
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+## What the CLI does
+
+1. **Validates your public key** against the Lucent ingest API.
+2. **Prompts for your framework** and (where relevant) a sub‑variant like
+   App Router vs Pages Router, or Vite vs Create React App.
+3. **Detects your package manager** (`npm`, `yarn`, `pnpm`) and installs
+   `@lucenthq/sdk`.
+4. **Writes an environment variable** into the right `.env` file for your
+   framework (`NEXT_PUBLIC_LUCENT_PUBLIC_KEY`, `VITE_LUCENT_PUBLIC_KEY`, etc.).
+5. **Creates a provider or service file** (`app/providers.tsx`,
+   `src/lib/lucent.ts`, `lucent.service.ts`, …).
+6. **Modifies your root file** to wire the provider into your app tree.
+
+If any step is unsafe to automate — your root file has a shape the CLI can't
+recognize, or the target file is missing — the CLI prints exact manual
+instructions and keeps going.
+
+## Supported frameworks
+
+<CardGroup cols={2}>
+  <Card title="Next.js" icon="n" href="/sdk/frameworks/nextjs">
+    App Router and Pages Router.
+  </Card>
+  <Card title="React" icon="react" href="/sdk/frameworks/react">
+    Vite and Create React App.
+  </Card>
+  <Card title="Vue" icon="vuejs" href="/sdk/frameworks/vue">
+    Vue 3 with Vite.
+  </Card>
+  <Card title="Angular" icon="angular" href="/sdk/frameworks/angular">
+    Standalone (17+) and NgModule.
+  </Card>
+  <Card title="Svelte" icon="s" href="/sdk/frameworks/svelte">
+    SvelteKit and plain Svelte.
+  </Card>
+  <Card title="Nuxt" icon="n" href="/sdk/frameworks/nuxt">
+    Nuxt 3.
+  </Card>
+  <Card title="Remix" icon="r" href="/sdk/frameworks/remix">
+    Remix v2.
+  </Card>
+  <Card title="Astro" icon="rocket" href="/sdk/frameworks/astro">
+    Astro with Layout components.
+  </Card>
+  <Card title="Gatsby" icon="g" href="/sdk/frameworks/gatsby">
+    Gatsby v5.
+  </Card>
+  <Card title="Vanilla JS" icon="js" href="/sdk/frameworks/vanilla">
+    Plain JavaScript, any bundler.
+  </Card>
+</CardGroup>
+
+## Flags
+
+<ResponseField name="--dry-run" type="flag">
+  Print every action the CLI would take without touching the filesystem or
+  installing any packages. Useful for previewing changes in a clean repo.
+</ResponseField>
+
+## What the CLI fully automates vs what it scaffolds
+
+Not every framework can be wired up without human judgment. The table below is
+the honest truth about what `npx @lucenthq/cli init` does for each framework.
+When a framework is marked **scaffold + manual step**, the CLI still writes the
+provider file and env var — it just prints one final step you need to do by
+hand. Every framework page in this section shows exactly what that step is.
+
+| Framework | Category | Final step |
+| --------- | -------- | ---------- |
+| Next.js App Router | Fully automatic | — |
+| React (Vite) | Fully automatic | — |
+| React (CRA) | Fully automatic | — |
+| Vue | Fully automatic | — |
+| SvelteKit | Fully automatic | — |
+| Svelte (plain) | Fully automatic | — |
+| Astro | Fully automatic | — |
+| Gatsby | Fully automatic | — |
+| Next.js Pages Router | Scaffold + manual step | Wrap `<Component>` with `<LucentProvider>` in `pages/_app.tsx` |
+| Angular (Standalone) | Scaffold + manual step | Inject `LucentService` in `AppComponent` so DI instantiates it |
+| Angular (NgModule) | Scaffold + manual step | Inject `LucentService` in `AppComponent` so DI instantiates it |
+| Nuxt | Scaffold + manual step | Add `lucentPublicKey` to `runtimeConfig.public` in `nuxt.config.ts` |
+| Remix | Scaffold + manual step | Expose `LUCENT_PUBLIC_KEY` via a loader |
+| Vanilla JS | Scaffold only | Add the script tag and bundle the init file yourself |
+
+<Note>
+  The "fully automatic" list is verified by running the CLI against real
+  starter files for each framework and checking that the output compiles.
+  If you hit a case the CLI can't handle — e.g. a customized `layout.tsx`
+  with a non‑standard structure — the CLI falls back to manual instructions
+  instead of producing broken code.
+</Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Validation failed — 'Invalid or revoked public key'">
+    Either the key is wrong, has been revoked in the dashboard, or belongs to
+    a different org. Get a fresh key at **Settings → SDK keys** in
+    [app.lucenthq.com](https://app.lucenthq.com).
+  </Accordion>
+  <Accordion title="Could not reach Lucent API">
+    The CLI validates your key against the ingest API before touching your
+    project. Check your network connection and retry. If you're behind a
+    corporate proxy, you may need to configure `HTTPS_PROXY`.
+  </Accordion>
+  <Accordion title="CLI skipped my root file">
+    The CLI skips files that already contain the word "lucent" or reference
+    `@lucenthq/sdk`. This is intentional — rerunning the CLI won't clobber
+    an existing setup. If you want to re‑apply the template, remove the
+    Lucent references by hand first.
+  </Accordion>
+  <Accordion title="My framework isn't listed">
+    Use the [vanilla JS](/sdk/frameworks/vanilla) instructions — they work
+    with any bundler. If you'd like first‑class support for your framework,
+    [open an issue](https://github.com/lucent-ai/mono-lucent/issues).
+  </Accordion>
+</AccordionGroup>

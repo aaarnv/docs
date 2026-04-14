@@ -1,0 +1,96 @@
+---
+title: "Angular"
+description: "Install Lucent in an Angular app. Supports both Standalone (17+) and NgModule."
+---
+
+<Warning>
+  **Scaffold + manual step.** The CLI writes the environment file and
+  `LucentService`, but Angular's DI is lazy — the service won't run until
+  something injects it. You must add a one‑line constructor inject in
+  `AppComponent` after the CLI finishes.
+</Warning>
+
+## Install with the CLI
+
+```bash
+npx @lucenthq/cli init luc_pk_...
+```
+
+Pick **Angular** when prompted, then choose your style.
+
+## Standalone (Angular 17+)
+
+<Steps>
+  <Step title="Environment file">
+    `src/environments/environment.ts`:
+    ```ts
+    export const environment = { lucentPublicKey: "luc_pk_..." };
+    ```
+  </Step>
+  <Step title="LucentService">
+    `src/app/lucent.service.ts`:
+    ```ts
+    import { Injectable, OnDestroy } from "@angular/core";
+    import { LucentTracker } from "@lucenthq/sdk";
+    import { environment } from "../environments/environment";
+
+    @Injectable({ providedIn: "root" })
+    export class LucentService implements OnDestroy {
+      private tracker: LucentTracker;
+
+      constructor() {
+        this.tracker = new LucentTracker({
+          publicKey: environment.lucentPublicKey,
+        });
+        this.tracker.start();
+      }
+
+      ngOnDestroy() {
+        this.tracker.stop();
+      }
+    }
+    ```
+  </Step>
+  <Step title="Inject in AppComponent (manual)">
+    Angular's DI is lazy. The service won't start until something injects it.
+    Add this one line to `src/app/app.component.ts`:
+
+    ```ts
+    import { Component } from "@angular/core";
+    import { LucentService } from "./lucent.service";
+
+    @Component({ /* ... */ })
+    export class AppComponent {
+      constructor(private lucent: LucentService) {}
+    }
+    ```
+  </Step>
+</Steps>
+
+## NgModule (pre‑17)
+
+The setup is identical to Standalone — same environment file, same
+`LucentService`, same one‑line inject in `AppComponent`. The only difference is
+which file you inject from.
+
+```ts
+// src/app/app.component.ts
+import { Component } from "@angular/core";
+import { LucentService } from "./lucent.service";
+
+@Component({ /* ... */ })
+export class AppComponent {
+  constructor(private lucent: LucentService) {}
+}
+```
+
+## Notes
+
+- `providedIn: "root"` alone isn't enough. Angular tree‑shakes services that
+  are never injected anywhere, so you **must** reference `LucentService` from
+  at least one component constructor.
+- `ngOnDestroy` flushes any buffered events before the tracker shuts down.
+- If you already use `APP_INITIALIZER` for bootstrap‑time side effects, you
+  can wire `LucentService` into it instead of relying on `AppComponent`
+  construction. The CLI doesn't do this automatically because it requires
+  reading your existing provider configuration.
