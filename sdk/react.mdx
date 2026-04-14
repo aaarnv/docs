@@ -1,0 +1,129 @@
+---
+title: "React & Next.js"
+description: "Drop Lucent into a React or Next.js app with a provider and a hook."
+---
+
+The React entry point exposes three things: a **provider** that manages tracker
+lifecycle, a **renderless identify component** that syncs user identity, and a
+**hook** that returns the underlying tracker.
+
+```ts
+import { LucentProvider, LucentIdentify, useLucent } from "@lucenthq/sdk/react";
+```
+
+## LucentProvider
+
+Wraps your app, creates a single `LucentTracker` instance, and manages
+`start`/`stop` across the component lifetime.
+
+```tsx
+<LucentProvider publicKey="luc_pk_..." options={{ environment: "production" }}>
+  {children}
+</LucentProvider>
+```
+
+### Props
+
+<ResponseField name="publicKey" type="string" required>
+  Your Lucent publishable key (`luc_pk_...`). Safe to expose in client‑side
+  code — it can only write session data to your org and cannot read anything.
+</ResponseField>
+
+<ResponseField name="options" type="Omit<LucentInitOptions, 'publicKey'>">
+  Any option accepted by `LucentTracker` *except* `publicKey`. See the
+  [Configuration](/sdk/configuration) page for the full list.
+</ResponseField>
+
+<ResponseField name="children" type="ReactNode" required>
+  Your application tree.
+</ResponseField>
+
+### Lifecycle
+
+The provider creates the tracker lazily on first render. On mount it calls
+`tracker.start()` (unless `options.autoStart === false`). On unmount it calls
+`tracker.stop()`, which flushes any buffered events.
+
+<Warning>
+  Do not remount `LucentProvider` on every render or route change — it should
+  sit at the **root** of your app. Remounting will reset the recording session
+  and cause gaps in your data.
+</Warning>
+
+## LucentIdentify
+
+A renderless component that calls `tracker.identify(...)` whenever its props
+change, and `tracker.resetIdentity()` when `userId` becomes null. Use it to
+sync your auth state with Lucent declaratively.
+
+```tsx
+<LucentProvider publicKey="luc_pk_...">
+  <LucentIdentify
+    userId={user?.id}
+    email={user?.email}
+    name={user?.name}
+    properties={{ plan: user?.plan }}
+  />
+  {children}
+</LucentProvider>
+```
+
+### Props
+
+<ResponseField name="userId" type="string | null">
+  Your internal user ID. When this transitions from a value to `null`, Lucent
+  resets the identity and generates a new anonymous ID.
+</ResponseField>
+
+<ResponseField name="email" type="string | null">
+  Optional email address. Shown in the dashboard to help you find sessions.
+</ResponseField>
+
+<ResponseField name="name" type="string | null">
+  Optional display name.
+</ResponseField>
+
+<ResponseField name="properties" type="Record<string, unknown>">
+  Arbitrary key/value pairs attached to the user. Useful for plan tier,
+  signup date, feature flags, etc.
+</ResponseField>
+
+## useLucent
+
+Returns the tracker instance from the nearest `LucentProvider`, or `null` if
+called outside a provider. Use this when you want to track custom events or
+manually flush.
+
+```tsx
+import { useLucent } from "@lucenthq/sdk/react";
+
+export function CheckoutButton() {
+  const lucent = useLucent();
+
+  return (
+    <button
+      onClick={() => {
+        lucent?.track("checkout_clicked", { plan: "pro" });
+      }}
+    >
+      Upgrade
+    </button>
+  );
+}
+```
+
+<Tip>
+  `useLucent` returns `null` during SSR and on the first render if the provider
+  hasn't mounted yet. Always guard with `lucent?.` or a conditional before
+  calling methods.
+</Tip>
+
+## Next.js notes
+
+- Place `LucentProvider` in a **client component** at the root of your app —
+  typically directly inside `app/layout.tsx`. You'll need `"use client"` at
+  the top of the file that renders the provider.
+- The provider is safe to render during SSR: all side effects happen inside
+  `useEffect`, which only runs in the browser.
+- Store your key in `NEXT_PUBLIC_LUCENT_PUBLIC_KEY` and read it with
+  `process.env.NEXT_PUBLIC_LUCENT_PUBLIC_KEY`.

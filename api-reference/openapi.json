@@ -1,216 +1,303 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
+    "title": "Lucent Ingest API",
+    "description": "HTTP ingest API for the Lucent session replay platform. Receives rrweb batches from the @lucenthq/sdk browser package and any custom integrations built on top of the same contract.",
+    "license": { "name": "MIT" },
+    "version": "0.1.0"
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://batch-jobs-lucent.onrender.com",
+      "description": "Production ingest"
     }
   ],
   "security": [
-    {
-      "bearerAuth": []
-    }
+    { "lucentApiKey": [] }
   ],
   "paths": {
-    "/plants": {
-      "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
+    "/api/sdk/init": {
+      "post": {
+        "summary": "Fetch SDK runtime config",
+        "description": "Returns the runtime configuration a browser SDK instance should use — whether recording is enabled for this key, the session sample rate, and the batching limits. Called once at SDK startup.",
+        "operationId": "sdkInit",
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Runtime config for the SDK instance.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InitResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/sdk/replay": {
+      "post": {
+        "summary": "Submit a replay batch",
+        "description": "Accepts a batch of rrweb events for a single session window. Batches are idempotent per `(sessionId, sequence)` — the same batch submitted twice is stored once. When `flush` is `final`, the server dispatches the session for processing immediately; otherwise the session is left in a `receiving` state until a scheduled finalizer picks it up.",
+        "operationId": "sdkReplay",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReplayBatch" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch accepted.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
+                  "type": "object",
+                  "required": ["ok"],
+                  "properties": {
+                    "ok": { "type": "boolean", "const": true }
                   }
                 }
               }
             }
           },
           "400": {
-            "description": "Unexpected error",
+            "description": "Invalid replay batch.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": {
+                    "error": { "type": "string", "example": "Invalid replay batch" },
+                    "details": {
+                      "type": "array",
+                      "description": "Zod validation issues.",
+                      "items": { "type": "object" }
+                    }
+                  }
                 }
               }
             }
           },
-          "400": {
-            "description": "unexpected error",
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": {
+            "description": "Storage upload or server error.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "required": ["error"],
+                  "properties": { "error": { "type": "string" } }
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
           }
         }
       }
     }
   },
   "components": {
-    "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
-          },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
+    "securitySchemes": {
+      "lucentApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Lucent-Api-Key",
+        "description": "Public key prefixed with `luc_pk_`. Safe to expose in client-side code. For `navigator.sendBeacon` callers that cannot set headers, the key may also be passed as the `api_key` query parameter."
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing, invalid, or revoked API key.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["error"],
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "enum": ["Missing API key", "Invalid or revoked API key"]
+                }
               }
             }
           }
-        ]
+        }
       },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "message": {
-            "type": "string"
+      "RateLimited": {
+        "description": "Rate limit exceeded (100 requests per minute per API key).",
+        "headers": {
+          "Retry-After": {
+            "description": "Seconds until the rate limit resets.",
+            "schema": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["error"],
+              "properties": {
+                "error": { "type": "string", "const": "Rate limit exceeded" }
+              }
+            }
           }
         }
       }
     },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+    "schemas": {
+      "InitResponse": {
+        "type": "object",
+        "required": ["enabled", "sessionSampleRate", "config"],
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether recording is enabled for this key.",
+            "example": true
+          },
+          "sessionSampleRate": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Fraction of sessions the SDK should record.",
+            "example": 1.0
+          },
+          "config": {
+            "type": "object",
+            "required": ["flushIntervalMs", "maxEventsPerBatch", "maxBatchBytes"],
+            "properties": {
+              "flushIntervalMs": { "type": "integer", "example": 10000 },
+              "maxEventsPerBatch": { "type": "integer", "example": 500 },
+              "maxBatchBytes": { "type": "integer", "example": 1048576 }
+            }
+          }
+        }
+      },
+      "RrwebEvent": {
+        "type": "object",
+        "description": "A single rrweb event. Opaque to Lucent — stored and replayed as-is.",
+        "required": ["timestamp", "type", "data"],
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "description": "Epoch milliseconds when the event was captured."
+          },
+          "type": {
+            "type": "integer",
+            "description": "rrweb event type discriminator."
+          },
+          "data": {
+            "description": "rrweb event payload. Shape depends on `type`."
+          }
+        }
+      },
+      "ReplayBatch": {
+        "type": "object",
+        "required": ["session", "user", "page", "replay"],
+        "properties": {
+          "session": {
+            "type": "object",
+            "required": ["id", "windowId", "startedAt", "lastActivityAt", "url"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stable session ID generated by the SDK. Shared across batches belonging to the same session."
+              },
+              "windowId": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Per-tab window ID. Distinguishes concurrent tabs within a session."
+              },
+              "startedAt": {
+                "type": "number",
+                "description": "Epoch milliseconds when the session started."
+              },
+              "lastActivityAt": {
+                "type": "number",
+                "description": "Epoch milliseconds of the most recent event in the session so far."
+              },
+              "url": {
+                "type": "string",
+                "description": "URL the session started on."
+              }
+            }
+          },
+          "user": {
+            "type": "object",
+            "required": ["anonymousId"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Your internal user ID if `identify` has been called."
+              },
+              "anonymousId": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Anonymous ID generated by the SDK and persisted in localStorage."
+              },
+              "properties": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true,
+                "description": "Arbitrary user properties. `email` and `name` are surfaced in the dashboard when present."
+              }
+            }
+          },
+          "page": {
+            "type": "object",
+            "required": ["url"],
+            "properties": {
+              "url": { "type": "string" },
+              "referrer": { "type": "string", "nullable": true },
+              "viewport": {
+                "type": "object",
+                "nullable": true,
+                "required": ["width", "height"],
+                "properties": {
+                  "width": { "type": "number" },
+                  "height": { "type": "number" }
+                }
+              }
+            }
+          },
+          "replay": {
+            "type": "object",
+            "required": ["events", "sequence"],
+            "properties": {
+              "events": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/components/schemas/RrwebEvent" },
+                "description": "rrweb events in chronological order."
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Monotonically increasing batch sequence number within a session. Used as an idempotency key together with `session.id`."
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "userAgent": { "type": "string", "nullable": true },
+              "language": { "type": "string", "nullable": true }
+            }
+          },
+          "flush": {
+            "type": "string",
+            "enum": ["normal", "final"],
+            "default": "normal",
+            "description": "`final` tells the server this is the last batch for the session — typically sent from a `beforeunload` handler. `final` batches trigger immediate session processing."
+          }
+        }
       }
     }
   }

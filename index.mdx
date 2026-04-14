@@ -1,97 +1,40 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Welcome to Lucent"
+description: "Session replay and product insights that show you exactly what happened."
 ---
 
-## Setting up
+Lucent records real user sessions in your web app, stores them securely, and
+turns them into signals you can act on — rage clicks, dead clicks, broken flows,
+and AI‑generated insights that explain *why* a session went sideways.
 
-Get your documentation site up and running in minutes.
+## Start here
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install the browser SDK and record your first session in under five minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Browser SDK" icon="code" href="/sdk/installation">
+    `@lucenthq/sdk` — a lightweight rrweb‑based recorder for any web app.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="API reference" icon="terminal" href="/api-reference/introduction">
+    HTTP endpoints for self‑hosted and server‑side integrations.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Dashboard" icon="chart-line" href="https://app.lucenthq.com">
+    View recorded sessions, filter by signal, and manage API keys.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## How Lucent works
 
-Everything you need to create world-class documentation.
+1. **Record** — drop `@lucenthq/sdk` into your app. It uses rrweb under the
+   hood to capture DOM mutations, clicks, inputs, console output, and network
+   calls, with a privacy‑first default that masks all text.
+2. **Ingest** — events are batched in the browser and flushed to Lucent's
+   ingest API. Sessions are stored immutably and processed asynchronously.
+3. **Analyze** — Lucent detects rage clicks, dead clicks, and navigation
+   friction, then runs an AI analysis pass over each session to surface
+   the issues that matter.
+4. **Act** — review signals in the dashboard, share links with your team,
+   or pipe them into your issue tracker.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+Ready? Head to the [Quickstart](/quickstart).

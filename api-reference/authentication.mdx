@@ -1,0 +1,80 @@
+---
+title: "Authentication"
+description: "How Lucent API keys are validated and rate limited."
+---
+
+All requests to the Lucent ingest API are authenticated with a **public key**
+issued from your dashboard. Public keys begin with `luc_pk_` and are scoped to
+a single organization. They are **write‑only** — they can submit session data
+but cannot read anything back, which is why it is safe to embed them in
+client‑side JavaScript.
+
+## Key format
+
+```text
+luc_pk_7a4f9e2b6c1d3f...
+```
+
+Create and revoke keys at **Settings → SDK keys** in [app.lucenthq.com](https://app.lucenthq.com).
+
+## Passing the key
+
+Lucent accepts the key in either an HTTP header *or* a query parameter. The
+header is preferred; the query parameter exists so that `navigator.sendBeacon`
+requests (which cannot set custom headers) can still authenticate on page
+unload.
+
+<Tabs>
+  <Tab title="HTTP header (preferred)">
+    ```http
+    POST /api/sdk/replay HTTP/1.1
+    Host: batch-jobs-lucent.onrender.com
+    Content-Type: application/json
+    X-Lucent-Api-Key: luc_pk_...
+    ```
+  </Tab>
+  <Tab title="Query parameter (sendBeacon fallback)">
+    ```http
+    POST /api/sdk/replay?api_key=luc_pk_... HTTP/1.1
+    Host: batch-jobs-lucent.onrender.com
+    Content-Type: application/json
+    ```
+  </Tab>
+</Tabs>
+
+## Error responses
+
+<ResponseField name="401 Unauthorized">
+  - `{"error": "Missing API key"}` — no `X-Lucent-Api-Key` header or `api_key`
+    query parameter was supplied.
+  - `{"error": "Invalid or revoked API key"}` — the key is not recognized or
+    has been revoked in the dashboard.
+</ResponseField>
+
+<ResponseField name="429 Too Many Requests">
+  Rate limit exceeded. The response includes a `Retry-After` header with the
+  number of seconds until the limit resets.
+</ResponseField>
+
+## Rate limits
+
+Each API key is limited to **100 requests per minute** per key, using a
+sliding‑window algorithm. With the SDK's default batching settings
+(`flushIntervalMs: 10_000`), a single browser session produces roughly 6
+requests per minute — well under the limit.
+
+If you build a custom server‑side integration that aggregates many sessions
+through a single key, you may need multiple keys or a higher tier. Contact
+[support@lucenthq.com](mailto:support@lucenthq.com) if you run into limits.
+
+## CORS
+
+The ingest API responds with `Access-Control-Allow-Origin: *`, so you can call
+it from any browser origin. The following headers are allowed on requests:
+
+- `Content-Type`
+- `Content-Encoding` (for gzipped bodies)
+- `X-Lucent-Api-Key`
+
+Preflight `OPTIONS` requests are handled automatically and require no special
+client configuration.

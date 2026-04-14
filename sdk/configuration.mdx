@@ -1,0 +1,183 @@
+---
+title: "Configuration"
+description: "Full reference for LucentInitOptions."
+---
+
+Every option the browser SDK accepts, with its default value and a note on
+when to change it. These apply to both `new LucentTracker(options)` and the
+`options` prop on `<LucentProvider>`.
+
+```ts
+import { LucentTracker } from "@lucenthq/sdk";
+
+const tracker = new LucentTracker({
+  publicKey: "luc_pk_...",
+  environment: "production",
+  privacy: { mode: "privacy-first" },
+  sampling: { sessionReplay: 1.0 },
+  capture: {
+    clicks: true,
+    inputs: true,
+    forms: true,
+    canvas: false,
+    console: true,
+    network: true,
+  },
+});
+```
+
+## Core
+
+<ResponseField name="publicKey" type="string" required>
+  Your Lucent publishable key (`luc_pk_...`). Safe to expose in client‑side
+  code — can only write session data to your org, cannot read anything.
+  Manage keys in the [dashboard](https://app.lucenthq.com).
+</ResponseField>
+
+<ResponseField name="ingestBaseUrl" type="string" default="https://batch-jobs-lucent.onrender.com">
+  Override the ingest endpoint. Only needed for self‑hosted setups or internal
+  testing.
+</ResponseField>
+
+<ResponseField name="environment" type='"production" | "staging" | "development"' default='"production"'>
+  Labels sessions in the dashboard so you can filter prod traffic from staging.
+</ResponseField>
+
+<ResponseField name="autoStart" type="boolean" default="true">
+  When `false`, the tracker will not begin recording until you explicitly call
+  `start()`. Useful when you want to wait for user consent before collecting
+  data.
+</ResponseField>
+
+## Privacy
+
+Lucent ships with a **privacy‑first default**: all text content is masked and
+all inputs are redacted unless you opt in.
+
+<ResponseField name="privacy.mode" type='"privacy-first" | "visibility-first"' default='"privacy-first"'>
+  - `privacy-first` — mask all text and inputs by default. Use `unredactSelectors`
+    to opt specific elements in.
+  - `visibility-first` — record text by default. Use `redactSelectors` and
+    `maskTextSelectors` to opt specific elements out.
+</ResponseField>
+
+<ResponseField name="privacy.redactSelectors" type="string[]" default="[]">
+  CSS selectors whose matched elements should have their text replaced with
+  asterisks. Commonly used for PII like email, name, address.
+</ResponseField>
+
+<ResponseField name="privacy.unredactSelectors" type="string[]" default="[]">
+  CSS selectors whose matched elements should **not** be redacted. Use in
+  `privacy-first` mode to opt specific text in.
+</ResponseField>
+
+<ResponseField name="privacy.maskAllInputs" type="boolean" default="true in privacy-first mode">
+  When `true`, all form inputs (except `<input type='button'>` and `<input type='submit'>`)
+  have their values replaced. Defaults to `true` in `privacy-first` mode and
+  `false` in `visibility-first` mode.
+</ResponseField>
+
+<ResponseField name="privacy.maskTextSelectors" type="string[]" default="[]">
+  CSS selectors whose matched elements should be masked character‑by‑character.
+</ResponseField>
+
+<ResponseField name="privacy.blockSelectors" type="string[]" default="[]">
+  CSS selectors whose matched elements should be replaced with a placeholder
+  rectangle in the replay. Use for third‑party widgets you cannot safely record.
+</ResponseField>
+
+## Capture
+
+Toggle individual data sources on or off.
+
+<ResponseField name="capture.clicks" type="boolean" default="true">
+  Capture click events. Required for rage‑click and dead‑click detection.
+</ResponseField>
+
+<ResponseField name="capture.inputs" type="boolean" default="true">
+  Capture input interactions (subject to `privacy.maskAllInputs`).
+</ResponseField>
+
+<ResponseField name="capture.forms" type="boolean" default="true">
+  Capture form submissions.
+</ResponseField>
+
+<ResponseField name="capture.canvas" type="boolean" default="false">
+  Record `<canvas>` contents. Disabled by default because it is bandwidth‑heavy.
+</ResponseField>
+
+<ResponseField name="capture.console" type="boolean" default="true">
+  Capture `console.log` / `warn` / `error` output from the page.
+</ResponseField>
+
+<ResponseField name="capture.consoleLogLevels" type="string[]" default='["log", "warn", "error", "info", "debug", "assert"]'>
+  Which console levels to record. Tighten this to `["warn", "error"]` if you
+  want to reduce noise.
+</ResponseField>
+
+<ResponseField name="capture.network" type="boolean" default="true">
+  Capture `fetch` and `XMLHttpRequest` calls (method, URL, status, timing).
+  Request/response bodies are **not** captured.
+</ResponseField>
+
+<ResponseField name="capture.networkIgnoreUrls" type="(string | RegExp)[]" default="[]">
+  Network requests matching any of these patterns are skipped entirely. Useful
+  for filtering out noisy analytics or telemetry endpoints.
+</ResponseField>
+
+## Sampling
+
+<ResponseField name="sampling.sessionReplay" type="number" default="1.0">
+  Fraction of sessions to record, between `0.0` and `1.0`. The decision is
+  made once per `LucentTracker` instance on construction — not per event.
+  For example, `0.1` records 10% of sessions.
+</ResponseField>
+
+## Batching
+
+These defaults match what the ingest API is tuned for. Change them only if you
+have a specific reason.
+
+<ResponseField name="batching.flushIntervalMs" type="number" default="10000">
+  How often the event queue is flushed to the ingest API, in milliseconds.
+</ResponseField>
+
+<ResponseField name="batching.maxEventsPerBatch" type="number" default="500">
+  Maximum events per batch. Reaching this triggers an immediate flush.
+</ResponseField>
+
+<ResponseField name="batching.maxBatchBytes" type="number" default="1048576">
+  Maximum batch size in bytes (1 MiB). Reaching this triggers an immediate flush.
+</ResponseField>
+
+## Detection
+
+Thresholds for client‑side signal detection. Events that trip these fire
+`rage_click` and `dead_click` events into the session stream.
+
+<ResponseField name="detection.rageClickThreshold" type="number" default="3">
+  Number of clicks on the same target within one second that counts as a
+  rage click.
+</ResponseField>
+
+<ResponseField name="detection.deadClickTimeoutMs" type="number" default="500">
+  If a click produces no DOM mutation or navigation within this many
+  milliseconds, it's reported as a dead click.
+</ResponseField>
+
+## Metadata
+
+Arbitrary app metadata attached to every session.
+
+<ResponseField name="metadata.app" type="string">
+  Your application name. Shown in the dashboard.
+</ResponseField>
+
+<ResponseField name="metadata.version" type="string">
+  Your application version, e.g. `"1.4.2"`.
+</ResponseField>
+
+<ResponseField name="metadata.release" type="string">
+  A release identifier such as a git SHA. Useful for correlating sessions
+  with deploys.
+</ResponseField>

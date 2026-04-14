@@ -1,33 +1,40 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "Introduction"
+description: "The Lucent ingest API — endpoints for submitting session recordings."
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+The Lucent ingest API is a small, CORS‑enabled HTTP surface that the
+[`@lucenthq/sdk`](/sdk/installation) package talks to in production. You can
+also call it directly from your own instrumentation — for example, a native
+mobile app that already speaks rrweb, or a server‑side relay.
 
-## Welcome
+## Base URL
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+```text
+https://batch-jobs-lucent.onrender.com
+```
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+All endpoints are relative to this base URL. If you self‑host the ingest
+service, point the SDK at your own base URL via the `ingestBaseUrl` option.
+
+## Endpoints
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `POST` | `/api/sdk/init` | Fetch runtime configuration for a key (sampling, flush interval, batch limits). |
+| `POST` | `/api/sdk/replay` | Submit a batch of rrweb events for a session. |
+
+See [Init](/api-reference/endpoint/init) and [Replay](/api-reference/endpoint/replay)
+for the full request and response schemas.
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+Every request is authenticated with a `luc_pk_` public key. See the
+[Authentication](/api-reference/authentication) page for full details on the
+header format, query‑parameter fallback, error responses, and rate limits.
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
-```
+## Content encoding
+
+Replay batches can be large. The `/api/sdk/replay` endpoint accepts either
+plain JSON or gzip‑compressed JSON — set `Content-Encoding: gzip` on the
+request and the server will decompress the body before parsing.

@@ -1,0 +1,88 @@
+---
+title: "Installation"
+description: "Install @lucenthq/sdk and wire it into your app."
+---
+
+The Lucent browser SDK is published to npm as [`@lucenthq/sdk`](https://www.npmjs.com/package/@lucenthq/sdk).
+It ships both ESM and CommonJS builds and has a single runtime dependency on
+[rrweb](https://www.rrweb.io/). React bindings are exposed under
+`@lucenthq/sdk/react` and are only loaded if you import them.
+
+## Requirements
+
+- A modern browser environment (evergreen Chrome, Safari, Firefox, Edge).
+- A Lucent public key — see the [Quickstart](/quickstart) for how to create one.
+- React 18 or 19 if you plan to use the React bindings (optional peer dependency).
+
+## Install
+
+<CodeGroup>
+
+```bash npm
+npm install @lucenthq/sdk
+```
+
+```bash pnpm
+pnpm add @lucenthq/sdk
+```
+
+```bash yarn
+yarn add @lucenthq/sdk
+```
+
+```bash bun
+bun add @lucenthq/sdk
+```
+
+</CodeGroup>
+
+## Entry points
+
+The package exposes two entry points:
+
+| Import | Use when |
+| ------ | -------- |
+| `@lucenthq/sdk` | You're using vanilla JavaScript/TypeScript, or you want direct access to `LucentTracker`. |
+| `@lucenthq/sdk/react` | You're building with React or Next.js and want the provider/hook API. |
+
+<Note>
+  Both entry points resolve to the same underlying tracker. Importing the React
+  entry does **not** pull in React unless React is already in your bundle — it
+  declares React as an optional peer dependency.
+</Note>
+
+## Minimal example
+
+<Tabs>
+  <Tab title="Vanilla JS">
+    ```ts
+    import { LucentTracker } from "@lucenthq/sdk";
+
+    const tracker = new LucentTracker({
+      publicKey: "luc_pk_...",
+    });
+
+    tracker.start();
+    ```
+  </Tab>
+  <Tab title="React">
+    ```tsx
+    "use client";
+
+    import { LucentProvider } from "@lucenthq/sdk/react";
+
+    export default function App({ children }: { children: React.ReactNode }) {
+      return (
+        <LucentProvider publicKey="luc_pk_...">
+          {children}
+        </LucentProvider>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [React integration](/sdk/react) — provider, identify, and hook APIs.
+- [Configuration](/sdk/configuration) — full options reference.
