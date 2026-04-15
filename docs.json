@@ -67,7 +67,6 @@
           {
             "group": "Ingest",
             "pages": [
-              "api-reference/endpoint/init",
               "api-reference/endpoint/replay"
             ]
           }

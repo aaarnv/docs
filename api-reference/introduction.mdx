@@ -1,6 +1,6 @@
 ---
 title: "Introduction"
-description: "The Lucent ingest API — endpoints for submitting session recordings."
+description: "The Lucent ingest API — the HTTP surface for submitting session recordings."
 ---
 
 The Lucent ingest API is a small, CORS‑enabled HTTP surface that the
@@ -17,15 +17,22 @@ https://batch-jobs-lucent.onrender.com
 All endpoints are relative to this base URL. If you self‑host the ingest
 service, point the SDK at your own base URL via the `ingestBaseUrl` option.
 
-## Endpoints
+## Endpoint
 
 | Method | Path | Purpose |
 | ------ | ---- | ------- |
-| `POST` | `/api/sdk/init` | Fetch runtime configuration for a key (sampling, flush interval, batch limits). |
 | `POST` | `/api/sdk/replay` | Submit a batch of rrweb events for a session. |
 
-See [Init](/api-reference/endpoint/init) and [Replay](/api-reference/endpoint/replay)
-for the full request and response schemas.
+See the [Replay endpoint](/api-reference/endpoint/replay) for the full request
+and response schema.
+
+<Note>
+  The current `@lucenthq/sdk` browser package uses hardcoded defaults
+  (`flushIntervalMs: 10000`, `maxEventsPerBatch: 500`, `maxBatchBytes: 1 MiB`)
+  and posts directly to `/api/sdk/replay` without an init handshake. If you're
+  building a custom integration on top of the ingest API, do the same —
+  the only runtime endpoint you need is `/api/sdk/replay`.
+</Note>
 
 ## Authentication
 
@@ -37,4 +44,5 @@ header format, query‑parameter fallback, error responses, and rate limits.
 
 Replay batches can be large. The `/api/sdk/replay` endpoint accepts either
 plain JSON or gzip‑compressed JSON — set `Content-Encoding: gzip` on the
-request and the server will decompress the body before parsing.
+request and the server will decompress the body before parsing. The browser
+SDK compresses by default.

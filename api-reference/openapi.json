@@ -16,25 +16,6 @@
     { "lucentApiKey": [] }
   ],
   "paths": {
-    "/api/sdk/init": {
-      "post": {
-        "summary": "Fetch SDK runtime config",
-        "description": "Returns the runtime configuration a browser SDK instance should use — whether recording is enabled for this key, the session sample rate, and the batching limits. Called once at SDK startup.",
-        "operationId": "sdkInit",
-        "responses": {
-          "200": {
-            "description": "Runtime config for the SDK instance.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/InitResponse" }
-              }
-            }
-          },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
-        }
-      }
-    },
     "/api/sdk/replay": {
       "post": {
         "summary": "Submit a replay batch",
@@ -149,34 +130,6 @@
       }
     },
     "schemas": {
-      "InitResponse": {
-        "type": "object",
-        "required": ["enabled", "sessionSampleRate", "config"],
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "description": "Whether recording is enabled for this key.",
-            "example": true
-          },
-          "sessionSampleRate": {
-            "type": "number",
-            "format": "float",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Fraction of sessions the SDK should record.",
-            "example": 1.0
-          },
-          "config": {
-            "type": "object",
-            "required": ["flushIntervalMs", "maxEventsPerBatch", "maxBatchBytes"],
-            "properties": {
-              "flushIntervalMs": { "type": "integer", "example": 10000 },
-              "maxEventsPerBatch": { "type": "integer", "example": 500 },
-              "maxBatchBytes": { "type": "integer", "example": 1048576 }
-            }
-          }
-        }
-      },
       "RrwebEvent": {
         "type": "object",
         "description": "A single rrweb event. Opaque to Lucent — stored and replayed as-is.",
